@@ -367,12 +367,13 @@ var SITE_LAUNCHED = false;
 var WAITLIST_ENDPOINT = "https://script.google.com/macros/s/AKfycbw1uS4dvd9qw8S-_0BQBgATLixgPldFqO7H3y6yv5LXkvViAxM8x7Og2hywWpHvXc1i/exec";
 
 document.querySelectorAll(".waitlist").forEach(function(box){
-  if (SITE_LAUNCHED) box.classList.add("launch");
+  var state = box.querySelector(".wl");
+  if (SITE_LAUNCHED) state.classList.add("launch");
   var form = box.querySelector("form");
   var input = box.querySelector("input");
   var err = box.querySelector(".err");
-  var setErr = function(msg){ box.classList.remove("done"); box.classList.add("error"); err.textContent = msg; };
-  var ok = function(){ box.classList.remove("error"); box.classList.add("done"); };
+  var setErr = function(msg){ state.classList.remove("done"); state.classList.add("error"); err.textContent = msg; };
+  var ok = function(){ state.classList.remove("error"); state.classList.add("done"); };
   form.addEventListener("submit", function(e){
     e.preventDefault();
     var v = input.value.trim();
