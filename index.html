@@ -105,6 +105,11 @@
   .txtfile{margin-top:auto;margin-bottom:8px;border-radius:12px;border:1px dashed rgba(212,180,140,.5);padding:10px 12px;font-size:11px;color:var(--champagne);letter-spacing:.04em}
   .bubble svg{width:22px;height:22px}
 
+  /* real app captures */
+  .phone.shot{padding:10px}
+  .phone img.shot{width:100%;flex:1 1 auto;min-height:0;object-fit:cover;object-position:top;border-radius:26px;display:block}
+  .ai-visual{display:flex;justify-content:center;margin-top:6px}
+
   /* generic sections */
   .head{max-width:24ch;margin-bottom:14px}
   .lead{max-width:62ch;font-size:18px;margin-bottom:44px}
@@ -200,11 +205,8 @@
       </div>
 
       <div class="art">
-        <div class="phone" aria-hidden="true">
-          <div class="bar"></div>
-          <div class="line m"></div><div class="line l"></div><div class="line s"></div><div class="line m"></div><div class="line l"></div><div class="line m"></div><div class="line s"></div>
-          <div class="bubble"><svg viewBox="0 0 24 24" fill="none" stroke="#191510" stroke-width="2" stroke-linecap="round"><path d="M12 3v10m0 0l-4-4m4 4l4-4M5 17v3h14v-3"/></svg></div>
-          <div class="txtfile">thread.txt &middot; 38 KB</div>
+        <div class="phone shot" aria-hidden="true">
+          <img class="shot" src="screens/shot-home.webp" alt="" width="720" height="1923" loading="lazy">
         </div>
       </div>
     </div>
@@ -233,7 +235,7 @@
         <div class="glass step">
           <div class="num">1</div><h3>Tap the bubble.</h3>
           <p>Start recording from the floating bubble, inside the app you&rsquo;re reading. Scroll yourself, or let auto-scroll carry it to the end.</p>
-          <div class="art"><div class="phone" style="width:150px" aria-hidden="true"><div class="bar"></div><div class="line m"></div><div class="line l"></div><div class="line s"></div><div class="bubble" style="margin:40px auto 0"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#191510" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="5"/></svg></div></div></div>
+          <div class="art"><div class="phone shot" style="width:150px" aria-hidden="true"><img class="shot" src="screens/shot-bubble.webp" alt="" width="720" height="1493" loading="lazy"></div></div>
         </div>
         <div class="glass step">
           <div class="num">2</div><h3>It reads on your phone.</h3>
@@ -246,7 +248,6 @@
           <div class="art"><div class="phone" style="width:150px" aria-hidden="true"><div class="bar"></div><div class="txtfile" style="margin-top:30px">Download/ScrollRSI<br>thread.txt &middot; capture.mp4</div><div class="line m"></div><div class="line s"></div></div></div>
         </div>
       </div>
-      <p class="note" style="margin-top:18px">Screens below are styled stand-ins &mdash; real app captures slot in here.</p>
     </div>
   </section>
 
@@ -256,6 +257,12 @@
       <p class="eyebrow">Made for long AI threads</p>
       <h2 class="head">One-tap thread sharing <span class="hl">between apps.</span></h2>
       <p class="lead">Spent a day working something out with one AI? Carry the whole conversation to another as a single small text file &mdash; Grok, Gemini, ChatGPT, Claude, or anything that takes an attachment. One tap starts it; auto-scroll takes it from there, even through a year-long thread.</p>
+
+      <div class="ai-visual">
+        <div class="phone shot" style="width:230px" aria-hidden="true">
+          <img class="shot" src="screens/shot-autoscroll.webp" alt="" width="720" height="1393" loading="lazy">
+        </div>
+      </div>
     </div>
   </section>
 
