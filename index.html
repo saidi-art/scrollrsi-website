@@ -355,7 +355,7 @@
    WAITLIST_ENDPOINT: URL that accepts {email, ts} POSTs and stores the
    address and a timestamp, nothing else. Empty = list not switched on. */
 var SITE_LAUNCHED = false;
-var WAITLIST_ENDPOINT = "";
+var WAITLIST_ENDPOINT = "https://script.google.com/macros/s/AKfycbw1uS4dvd9qw8S-_0BQBgATLixgPldFqO7H3y6yv5LXkvViAxM8x7Og2hywWpHvXc1i/exec";
 
 document.querySelectorAll(".waitlist").forEach(function(box){
   if (SITE_LAUNCHED) box.classList.add("launch");
