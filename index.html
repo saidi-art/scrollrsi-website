@@ -3,17 +3,379 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ScrollRSI</title>
+<title>ScrollRSI — If you can scroll it, you can save it.</title>
+<meta name="description" content="Turn any scrolling screen into a clean text file — right on your phone. On-device OCR, no internet permission, no accounts. Coming soon to Google Play.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111113'/%3E%3Cpath d='M10 13l6-5 6 5M10 19l6 5 6-5' stroke='%23D4B48C' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
-  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #0b0f1a; color: #e8ecf4; font-family: system-ui, sans-serif; text-align: center; }
-  h1 { font-size: 2.4rem; margin: 0 0 .5rem; }
-  p { margin: 0; opacity: .7; }
+  @font-face{font-family:"Cormorant Garamond";src:url("fonts/cormorant-garamond-500.woff2") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+  @font-face{font-family:"Cormorant Garamond";src:url("fonts/cormorant-garamond-600.woff2") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+  @font-face{font-family:"Manrope";src:url("fonts/manrope-400.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+  @font-face{font-family:"Manrope";src:url("fonts/manrope-500.woff2") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+  @font-face{font-family:"Manrope";src:url("fonts/manrope-600.woff2") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+  @font-face{font-family:"Manrope";src:url("fonts/manrope-700.woff2") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+
+  :root{
+    --ground:#111113; --ground2:#141416; --champagne:#D4B48C; --cream:#F1E8D8;
+    --body:#C9C2B6; --muted:#A8A296; --bronze:#8C6A45; --error:#F0A48D;
+    --glass:rgba(255,255,255,.045); --glass-line:rgba(255,255,255,.10);
+    --serif:"Cormorant Garamond",Georgia,serif; --sans:"Manrope",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--ground); color:var(--body);
+    font-family:var(--sans); font-size:16px; line-height:1.6;
+    -webkit-font-smoothing:antialiased; overflow-x:hidden;
+  }
+  .glow{position:fixed;border-radius:50%;filter:blur(90px);opacity:.16;pointer-events:none;z-index:0}
+  .glow.a{width:520px;height:520px;background:var(--bronze);top:-160px;right:-120px}
+  .glow.b{width:460px;height:460px;background:var(--bronze);bottom:8%;left:-180px}
+  main,header.top,footer{position:relative;z-index:1}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+  section{padding:clamp(64px,9vw,112px) 0}
+  h1,h2{font-family:var(--serif);font-weight:600;color:var(--cream);line-height:1.08;letter-spacing:.01em}
+  h1{font-size:clamp(46px,6.4vw,84px)}
+  h2{font-size:clamp(36px,4vw,52px)}
+  h3{font-size:20px;font-weight:700;color:var(--cream)}
+  .hl{font-family:var(--serif);font-style:italic;font-weight:500;color:var(--champagne)}
+  .eyebrow{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .note{font-size:13px;color:var(--muted)}
+  p{color:var(--body)}
+  .glass{background:var(--glass);border:1px solid var(--glass-line);border-radius:28px}
+  .up{color:var(--champagne)} .down{color:var(--cream)}
+
+  /* top bar */
+  header.top{padding:22px 0}
+  header.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .wordmark{font-family:var(--serif);font-weight:600;font-size:26px;color:var(--cream);text-decoration:none}
+  .wordmark .mk{color:var(--champagne)}
+  header.top nav a{color:var(--muted);text-decoration:none;font-size:13px;font-weight:600;letter-spacing:.04em;border:1px solid var(--glass-line);border-radius:999px;padding:10px 18px;transition:color .2s,border-color .2s}
+  header.top nav a:hover{color:var(--cream);border-color:rgba(212,180,140,.4)}
+
+  /* pills & badges */
+  .pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--glass-line);border-radius:999px;padding:8px 16px;font-size:13px;color:var(--muted);background:rgba(255,255,255,.03)}
+  .pill .dot{width:7px;height:7px;border-radius:50%;background:var(--champagne)}
+  .strip{display:flex;gap:10px;flex-wrap:wrap}
+  .strip span{font-size:13px;color:var(--muted);border:1px solid var(--glass-line);border-radius:999px;padding:7px 14px}
+
+  /* hero */
+  .hero{padding:clamp(40px,7vw,96px) 0 clamp(56px,8vw,104px)}
+  .hero .pill{margin-bottom:28px}
+  .hero h1{max-width:15ch;margin-bottom:20px}
+  .hero .sub{font-size:clamp(18px,2vw,21px);max-width:44ch;margin-bottom:36px}
+  .chev{display:block;margin:34px auto 0;font-size:22px;animation:nudge 2.4s ease-in-out infinite;text-decoration:none}
+  @keyframes nudge{0%,100%{transform:translateY(0);opacity:.7}50%{transform:translateY(6px);opacity:1}}
+
+  /* waiting-list component */
+  .waitlist{max-width:560px;padding:30px 30px 26px}
+  .waitlist h3{margin-bottom:4px;font-family:var(--serif);font-weight:600;font-size:26px}
+  .waitlist .note{margin-top:14px;line-height:1.55}
+  form.wl{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
+  .wl input{flex:1 1 260px;min-width:0;height:54px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:var(--cream);font:500 16px var(--sans);padding:0 18px;outline:none}
+  .wl input::placeholder{color:var(--muted)}
+  .wl input:focus{border-color:rgba(212,180,140,.55)}
+  .wl input.bad{border-color:var(--error)}
+  .btn{height:54px;border-radius:14px;border:0;background:var(--champagne);color:#191510;font:700 16px var(--sans);padding:0 26px;cursor:pointer;white-space:nowrap;transition:filter .2s}
+  .btn:hover{filter:brightness(1.06)}
+  .wl .err{display:none;margin-top:12px;color:var(--error);font-size:14px}
+  .wl.error .err{display:block}
+  .wl .done{display:none;margin-top:18px}
+  .wl.done form,.wl.done .err,.wl.done label{display:none}
+  .wl.done .done{display:block}
+  .wl .done h4{font-family:var(--serif);font-size:26px;color:var(--champagne);font-weight:600;margin-bottom:6px}
+  .launched{display:none;margin-top:18px}
+  .wl.launch .done,.wl.launch form,.wl.launch .err{display:none}
+  .wl.launch .launched{display:block}
+  .badge{display:inline-flex;align-items:center;gap:12px;border:1px solid var(--glass-line);border-radius:14px;height:64px;padding:0 22px;color:var(--cream);text-decoration:none;background:rgba(255,255,255,.05)}
+  .badge svg{width:26px;height:26px;flex:none}
+  .badge small{display:block;color:var(--muted);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+  .badge b{font-size:16px}
+
+  /* hero layout: text + phone */
+  .hero-grid{display:flex;gap:56px;align-items:center;flex-wrap:wrap}
+  .hero-grid .col{flex:1 1 460px;min-width:0}
+  .hero-grid .art{flex:1 1 320px;max-width:360px;justify-content:center;display:flex}
+
+  /* phone placeholder art */
+  .phone{width:250px;aspect-ratio:9/19.2;border-radius:34px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 1px rgba(140,106,69,.15),0 0 120px rgba(140,106,69,.12)}
+  .phone .bar{height:9px;border-radius:999px;background:rgba(255,255,255,.10);width:36%;margin:2px auto 6px}
+  .bubble{margin:64px auto 0;width:58px;height:58px;border-radius:50%;background:linear-gradient(160deg,rgba(212,180,140,.9),rgba(140,106,69,.85));display:grid;place-items:center;box-shadow:0 10px 30px rgba(140,106,69,.4)}
+  .line{height:10px;border-radius:999px;background:rgba(255,255,255,.09)}
+  .line.s{width:62%} .line.m{width:84%} .line.l{width:96%}
+  .txtfile{margin-top:auto;margin-bottom:8px;border-radius:12px;border:1px dashed rgba(212,180,140,.5);padding:10px 12px;font-size:11px;color:var(--champagne);letter-spacing:.04em}
+  .bubble svg{width:22px;height:22px}
+
+  /* generic sections */
+  .head{max-width:24ch;margin-bottom:14px}
+  .lead{max-width:62ch;font-size:18px;margin-bottom:44px}
+
+  .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+  .step{padding:30px 30px 32px;display:flex;flex-direction:column;gap:12px}
+  .step .num{font-family:var(--serif);font-size:44px;color:var(--champagne);line-height:1}
+  .step p{font-size:15.5px}
+  .step .art{margin-top:6px}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+  .card{padding:30px 30px 32px}
+  .card h3{margin:10px 0 8px}
+  .card p{font-size:15.5px}
+  .card .k{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--champagne);font-weight:700}
+
+  .priv{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+  .priv .card p{color:var(--muted)}
+  .priv .card b{color:var(--cream)}
+  .permnote{margin-top:26px;padding:24px 28px;border-radius:20px;border:1px solid var(--glass-line);background:rgba(255,255,255,.03);color:var(--muted);font-size:14.5px;max-width:820px}
+
+  table.specs{width:100%;max-width:820px;border-collapse:collapse}
+  table.specs td{padding:16px 4px;border-bottom:1px solid rgba(255,255,255,.08);vertical-align:top}
+  table.specs td:first-child{color:var(--muted);font-size:13px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;width:190px;padding-right:20px}
+  table.specs td:last-child{color:var(--cream)}
+
+  /* closing */
+  .closing{text-align:left}
+  .closing .waitlist{margin-top:34px}
+  .closing .up-big{font-size:26px;display:block;margin-bottom:10px}
+
+  footer{border-top:1px solid rgba(255,255,255,.07);padding:34px 0 46px}
+  footer .wrap{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;color:var(--muted);font-size:13.5px}
+  footer a{color:var(--muted);text-decoration:none}
+  footer a:hover{color:var(--cream)}
+  footer .fm{font-family:var(--serif);color:var(--cream);font-size:17px}
+
+  @media (max-width:420px){
+    .waitlist{padding:24px 20px 20px}
+    .btn{width:100%}
+    .wl input{flex-basis:100%}
+  }
 </style>
 </head>
 <body>
+<div class="glow a"></div><div class="glow b"></div>
+
+<header class="top">
+  <div class="wrap">
+    <a class="wordmark" href="#"><span class="mk">&#8964;&#94;</span> ScrollRSI</a>
+    <nav><a href="#waitlist">Join the waiting list</a></nav>
+  </div>
+</header>
+
 <main>
-  <h1>ScrollRSI</h1>
-  <p>Site coming soon.</p>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="col">
+        <span class="pill"><span class="dot"></span>Coming soon to Google Play &middot; Android 11+</span>
+        <h1>If you can scroll it, <span class="hl">you can save it.</span></h1>
+        <p class="sub">Turn any scrolling screen into a clean text file &mdash; right on your phone.</p>
+
+        <!-- WAITLIST (shared component) -->
+        <div class="glass waitlist" id="waitlist">
+          <h3>Join the waiting list</h3>
+          <form class="wl-form" novalidate>
+            <label class="note" for="wl-email" style="display:block">Email address</label>
+            <div class="wl">
+              <input id="wl-email" type="email" name="email" autocomplete="email" placeholder="you@example.com" required>
+              <button class="btn" type="submit">Join the waiting list</button>
+              <p class="err" role="alert"></p>
+              <div class="done">
+                <h4>You&rsquo;re on the list.</h4>
+                <p class="note">One email, the day ScrollRSI is on Google Play. Changed your mind? Write to <a style="color:var(--champagne)" href="mailto:saidi@kubeai.info">saidi@kubeai.info</a> and we&rsquo;ll delete your address.</p>
+              </div>
+              <div class="launched">
+                <a class="badge" href="#" aria-label="Get it on Google Play">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#D4B48C" stroke-width="1.6" stroke-linejoin="round"><path d="M5 3.5v17l9-8.5-9-8.5z"/><path d="M14 8.5l4.5 3.5-4.5 3.5"/></svg>
+                  <span><small>Get it on</small><b>Google Play</b></span>
+                </a>
+                <p class="note" style="margin-top:10px">US$2.99 one-time &middot; Android 11+</p>
+              </div>
+            </div>
+          </form>
+          <p class="note">We&rsquo;ll email you once &mdash; when ScrollRSI is on Google Play. Nothing else. To remove your address, write to saidi@kubeai.info.</p>
+        </div>
+
+        <div class="strip" style="margin-top:26px">
+          <span>On-device OCR</span><span>No internet permission</span><span>No accounts, no ads</span>
+        </div>
+      </div>
+
+      <div class="art">
+        <div class="phone" aria-hidden="true">
+          <div class="bar"></div>
+          <div class="line m"></div><div class="line l"></div><div class="line s"></div><div class="line m"></div><div class="line l"></div><div class="line m"></div><div class="line s"></div>
+          <div class="bubble"><svg viewBox="0 0 24 24" fill="none" stroke="#191510" stroke-width="2" stroke-linecap="round"><path d="M12 3v10m0 0l-4-4m4 4l4-4M5 17v3h14v-3"/></svg></div>
+          <div class="txtfile">thread.txt &middot; 38 KB</div>
+        </div>
+      </div>
+    </div>
+    <a class="chev down" href="#problem" aria-label="Scroll to the problem">&#8595;</a>
+  </section>
+
+  <!-- PROBLEM -->
+  <section id="problem">
+    <div class="wrap">
+      <p class="eyebrow">The problem</p>
+      <h2 class="head">Long threads don&rsquo;t come with an <span class="hl">export button.</span></h2>
+      <div class="cards">
+        <div class="glass card"><p><b style="color:var(--cream)">1.</b> Copying a day-long chat means select, copy, scroll, repeat &mdash; one chunk at a time.</p></div>
+        <div class="glass card"><p><b style="color:var(--cream)">2.</b> Most apps can&rsquo;t hand you a thread, a feed or a comment section as a file.</p></div>
+        <div class="glass card"><p><b style="color:var(--cream)">3.</b> And what you don&rsquo;t save can be edited, archived &mdash; or simply gone.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section style="background:var(--ground2)">
+    <div class="wrap">
+      <p class="eyebrow">How it works</p>
+      <h2 class="head">From thread to text file, in <span class="hl">three steps.</span></h2>
+      <div class="steps">
+        <div class="glass step">
+          <div class="num">1</div><h3>Tap the bubble.</h3>
+          <p>Start recording from the floating bubble, inside the app you&rsquo;re reading. Scroll yourself, or let auto-scroll carry it to the end.</p>
+          <div class="art"><div class="phone" style="width:150px" aria-hidden="true"><div class="bar"></div><div class="line m"></div><div class="line l"></div><div class="line s"></div><div class="bubble" style="margin:40px auto 0"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#191510" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="5"/></svg></div></div></div>
+        </div>
+        <div class="glass step">
+          <div class="num">2</div><h3>It reads on your phone.</h3>
+          <p>ScrollRSI reads the recording on the device, drops the repeats and stitches the lines in order. Nothing is uploaded.</p>
+          <div class="art"><div class="phone" style="width:150px" aria-hidden="true"><div class="bar"></div><div class="txtfile" style="margin-top:34px">reading&hellip; 84%</div><div class="line l"></div><div class="line m"></div><div class="line s"></div></div></div>
+        </div>
+        <div class="glass step">
+          <div class="num">3</div><h3>Keep it. Share it.</h3>
+          <p>You get a .txt file &mdash; the recording beside it &mdash; in Download/ScrollRSI. Attach it to any chat or app you like.</p>
+          <div class="art"><div class="phone" style="width:150px" aria-hidden="true"><div class="bar"></div><div class="txtfile" style="margin-top:30px">Download/ScrollRSI<br>thread.txt &middot; capture.mp4</div><div class="line m"></div><div class="line s"></div></div></div>
+        </div>
+      </div>
+      <p class="note" style="margin-top:18px">Screens below are styled stand-ins &mdash; real app captures slot in here.</p>
+    </div>
+  </section>
+
+  <!-- AI THREADS -->
+  <section>
+    <div class="wrap">
+      <p class="eyebrow">Made for long AI threads</p>
+      <h2 class="head">One-tap thread sharing <span class="hl">between apps.</span></h2>
+      <p class="lead">Spent a day working something out with one AI? Carry the whole conversation to another as a single small text file &mdash; Grok, Gemini, ChatGPT, Claude, or anything that takes an attachment. One tap starts it; auto-scroll takes it from there, even through a year-long thread.</p>
+    </div>
+  </section>
+
+  <!-- WHAT YOU GET -->
+  <section style="background:var(--ground2)">
+    <div class="wrap">
+      <p class="eyebrow">What you get</p>
+      <h2 class="head">Everything stays a <span class="hl">file you own.</span></h2>
+      <div class="cards">
+        <div class="glass card"><span class="k">Scroll capture</span><h3>One long image, the text saved too.</h3><p>ScrollRSI scrolls the page, captures each screen and joins them into a single tall screenshot &mdash; with its text beside it.</p></div>
+        <div class="glass card"><span class="k">Recording in, text out</span><h3>Screen-record a scroll, get a clean .txt.</h3><p>Already have recordings? Pick them and convert.</p></div>
+        <div class="glass card"><span class="k">One floating bubble</span><h3>Start, pause and stop in place.</h3><p>Without leaving the app you&rsquo;re in. No switching back and forth.</p></div>
+        <div class="glass card"><span class="k">Hands-off auto-scroll</span><h3>It scrolls for you.</h3><p>Allow it once in Accessibility. ScrollRSI scrolls the page and stops at the bottom by itself.</p></div>
+        <div class="glass card"><span class="k">Files on your phone</span><h3>Text and media land in Download/ScrollRSI.</h3><p>They open in your phone&rsquo;s own Files app.</p></div>
+        <div class="glass card"><span class="k">Share anywhere</span><h3>An ordinary attachment.</h3><p>Send the .txt to a chatbot, a notes app or a colleague.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRIVACY -->
+  <section>
+    <div class="wrap">
+      <p class="eyebrow">Private by design</p>
+      <h2 class="head">Nothing to upload, because <span class="hl">nothing leaves the phone.</span></h2>
+      <div class="priv">
+        <div class="glass card"><h3>On-device OCR</h3><p>Reading happens on your phone.</p></div>
+        <div class="glass card"><h3>No internet permission</h3><p>The app can&rsquo;t send anything.</p></div>
+        <div class="glass card"><h3>No accounts</h3><p>Nothing to sign up for.</p></div>
+        <div class="glass card"><h3>No ads, no subscription</h3><p>Pay once, keep it.</p></div>
+      </div>
+      <p class="permnote"><b style="color:var(--cream)">Clear about permissions:</b> auto-scroll uses Accessibility only to swipe the page and take the screenshots for a capture you start. The app says exactly that before you switch it on. Files are shared only when you choose.</p>
+    </div>
+  </section>
+
+  <!-- REQUIREMENTS -->
+  <section style="background:var(--ground2)">
+    <div class="wrap">
+      <p class="eyebrow">Requirements &amp; availability</p>
+      <h2 class="head">The short version.</h2>
+      <table class="specs">
+        <tr><td>Platform</td><td>Android 11 or newer</td></tr>
+        <tr><td>Price</td><td>US$2.99, one-time purchase</td></tr>
+        <tr><td>Availability</td><td>Coming soon to Google Play</td></tr>
+        <tr><td>Where files go</td><td>Download/ScrollRSI on your phone</td></tr>
+        <tr><td>Good to know</td><td>Very small or dense text, and tables, can come out imperfect &mdash; that&rsquo;s the nature of OCR.</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- CLOSING -->
+  <section class="closing">
+    <div class="wrap">
+      <span class="up-big up">&#8593;</span>
+      <h2 class="head">Saved. Every line, <span class="hl">once.</span></h2>
+      <p class="lead">Be the first to know when ScrollRSI is on Google Play.</p>
+
+      <div class="glass waitlist" id="waitlist-bottom">
+        <h3>Join the waiting list</h3>
+        <form class="wl-form" novalidate>
+          <label class="note" for="wl-email2" style="display:block">Email address</label>
+          <div class="wl">
+            <input id="wl-email2" type="email" name="email" autocomplete="email" placeholder="you@example.com" required>
+            <button class="btn" type="submit">Join the waiting list</button>
+            <p class="err" role="alert"></p>
+            <div class="done">
+              <h4>You&rsquo;re on the list.</h4>
+              <p class="note">One email, the day ScrollRSI is on Google Play. Changed your mind? Write to <a style="color:var(--champagne)" href="mailto:saidi@kubeai.info">saidi@kubeai.info</a> and we&rsquo;ll delete your address.</p>
+            </div>
+            <div class="launched">
+              <a class="badge" href="#" aria-label="Get it on Google Play">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#D4B48C" stroke-width="1.6" stroke-linejoin="round"><path d="M5 3.5v17l9-8.5-9-8.5z"/><path d="M14 8.5l4.5 3.5-4.5 3.5"/></svg>
+                <span><small>Get it on</small><b>Google Play</b></span>
+              </a>
+              <p class="note" style="margin-top:10px">US$2.99 one-time &middot; Android 11+</p>
+            </div>
+          </div>
+        </form>
+        <p class="note">We&rsquo;ll email you once &mdash; when ScrollRSI is on Google Play. Nothing else. To remove your address, write to saidi@kubeai.info.</p>
+      </div>
+    </div>
+  </section>
 </main>
+
+<footer>
+  <div class="wrap">
+    <span class="fm">ScrollRSI</span>
+    <span>by KubeAI</span>
+    <a href="privacy.html">Privacy policy</a>
+    <a href="mailto:saidi@kubeai.info">saidi@kubeai.info</a>
+    <span>&copy; 2026 KubeAI</span>
+  </div>
+</footer>
+
+<script>
+/* ScrollRSI site config ----------------------------------------------
+   SITE_LAUNCHED: false shows the waiting list; true swaps every form
+   slot for the Google Play badge + price. One flag, no redesign.
+   WAITLIST_ENDPOINT: URL that accepts {email, ts} POSTs and stores the
+   address and a timestamp, nothing else. Empty = list not switched on. */
+var SITE_LAUNCHED = false;
+var WAITLIST_ENDPOINT = "";
+
+document.querySelectorAll(".waitlist").forEach(function(box){
+  if (SITE_LAUNCHED) box.classList.add("launch");
+  var form = box.querySelector("form");
+  var input = box.querySelector("input");
+  var err = box.querySelector(".err");
+  var setErr = function(msg){ box.classList.remove("done"); box.classList.add("error"); err.textContent = msg; };
+  var ok = function(){ box.classList.remove("error"); box.classList.add("done"); };
+  form.addEventListener("submit", function(e){
+    e.preventDefault();
+    var v = input.value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) { setErr("That address looks incomplete \u2014 check the part after @."); return; }
+    if (!WAITLIST_ENDPOINT) { setErr("Couldn\u2019t add you just now. Try again, or write to saidi@kubeai.info."); return; }
+    var btn = form.querySelector(".btn"); btn.disabled = true;
+    fetch(WAITLIST_ENDPOINT, { method:"POST", headers:{ "Content-Type":"text/plain" },
+      body: JSON.stringify({ email:v, ts:new Date().toISOString() }) })
+      .then(function(r){ if(!r.ok) throw 0; ok(); })
+      .catch(function(){ btn.disabled = false; setErr("Couldn\u2019t add you just now. Try again, or write to saidi@kubeai.info."); });
+  });
+});
+</script>
 </body>
 </html>
